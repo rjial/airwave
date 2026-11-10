@@ -176,7 +176,13 @@ impl Engine {
 
     // ---------------------------------------------------------------- server
 
-    pub fn start_server(&mut self, device: Option<String>, quality: Quality, codec: Codec, port: u16) {
+    pub fn start_server(
+        &mut self,
+        device: Option<String>,
+        quality: Quality,
+        codec: Codec,
+        port: u16,
+    ) {
         self.stop_server();
         let stop = Arc::new(AtomicBool::new(false));
         self.server_stop = Some(stop.clone());
@@ -192,7 +198,9 @@ impl Engine {
         thread::Builder::new()
             .name("airwave-server".into())
             .spawn(move || {
-                let res = run_server(device, quality, codec, port, name, &stop, &status, &meters, &taps);
+                let res = run_server(
+                    device, quality, codec, port, name, &stop, &status, &meters, &taps,
+                );
                 let mut st = status.lock().unwrap();
                 st.listeners.clear();
                 st.server = match res {
@@ -263,7 +271,8 @@ impl Engine {
             .spawn(move || {
                 let mut last = Instant::now() - Duration::from_secs(60);
                 loop {
-                    let due = auto.load(Ordering::Relaxed) && last.elapsed() > Duration::from_secs(4);
+                    let due =
+                        auto.load(Ordering::Relaxed) && last.elapsed() > Duration::from_secs(4);
                     if scan_now.swap(false, Ordering::Relaxed) || due {
                         last = Instant::now();
                         let replies = probe_once(Duration::from_millis(900));
@@ -339,8 +348,9 @@ fn run_responder(name: String, port: u16, stop: Arc<AtomicBool>, status: Arc<Mut
     let sock = match UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT)) {
         Ok(s) => s,
         Err(e) => {
-            status.lock().unwrap().discovery_note =
-                Some(format!("Other devices can't find this computer automatically ({e})."));
+            status.lock().unwrap().discovery_note = Some(format!(
+                "Other devices can't find this computer automatically ({e})."
+            ));
             return;
         }
     };
@@ -400,7 +410,9 @@ fn run_server(
         SampleFormat::F64 => build_input::<f64>(&device, &stream_cfg, in_ch, out_ch, tx, m)?,
         other => bail!("This sound source uses an unsupported format ({other})"),
     };
-    stream.play().context("Could not start recording from the sound source")?;
+    stream
+        .play()
+        .context("Could not start recording from the sound source")?;
 
     {
         let mut st = status.lock().unwrap();
@@ -451,15 +463,17 @@ fn run_server(
                 let mut taps = taps.lock().unwrap();
                 if !clients.is_empty() || !taps.is_empty() {
                     let n: usize = packets.iter().map(|p| p.len()).sum();
-                    meters.bytes_sent.fetch_add(
-                        (n * (clients.len() + taps.len())) as u32,
-                        Ordering::Relaxed,
-                    );
+                    meters
+                        .bytes_sent
+                        .fetch_add((n * (clients.len() + taps.len())) as u32, Ordering::Relaxed);
                 }
                 for packet in &packets {
                     clients.retain_mut(|(s, _)| s.write_all(packet).is_ok());
                     taps.retain(|t| {
-                        !matches!(t.tx.try_send(packet.clone()), Err(TrySendError::Disconnected(_)))
+                        !matches!(
+                            t.tx.try_send(packet.clone()),
+                            Err(TrySendError::Disconnected(_))
+                        )
                     });
                 }
             }
@@ -572,7 +586,11 @@ fn run_player(
                 status.lock().unwrap().player_format = format!(
                     "{:.1} kHz · {} · {} · {} speaker{}",
                     packet.rate as f32 / 1000.0,
-                    if packet.channels == 1 { "mono" } else { "stereo" },
+                    if packet.channels == 1 {
+                        "mono"
+                    } else {
+                        "stereo"
+                    },
                     packet.codec.describe(),
                     outputs.len(),
                     if outputs.len() == 1 { "" } else { "s" }
@@ -890,19 +908,29 @@ mod tests {
         let mut engine = Engine::new(0.5, 100, false);
         engine.start_server(None, Quality::Stereo, Codec::Adpcm, 59300);
         assert!(
-            wait_for(10, || engine.status.lock().unwrap().server == ServerState::Live),
+            wait_for(10, || engine.status.lock().unwrap().server
+                == ServerState::Live),
             "server state: {:?}",
             engine.status.lock().unwrap().server
         );
         engine.connect("127.0.0.1:59300".into(), Vec::new());
         assert!(
-            wait_for(10, || matches!(engine.status.lock().unwrap().player, PlayerState::Playing(_))),
+            wait_for(10, || matches!(
+                engine.status.lock().unwrap().player,
+                PlayerState::Playing(_)
+            )),
             "player state: {:?}",
             engine.status.lock().unwrap().player
         );
-        assert!(wait_for(5, || !engine.status.lock().unwrap().listeners.is_empty()));
+        assert!(wait_for(5, || !engine
+            .status
+            .lock()
+            .unwrap()
+            .listeners
+            .is_empty()));
         assert!(
-            wait_for(5, || engine.meters.bytes_sent.load(Ordering::Relaxed) > 48_000),
+            wait_for(5, || engine.meters.bytes_sent.load(Ordering::Relaxed)
+                > 48_000),
             "no audio bytes were sent"
         );
         let found = probe_once(Duration::from_millis(900));
@@ -957,7 +985,10 @@ mod tests {
                 println!(
                     "server={:?} listeners={:?} bytes={} level={:.3}",
                     st.server,
-                    st.listeners.iter().map(|l| l.label.clone()).collect::<Vec<_>>(),
+                    st.listeners
+                        .iter()
+                        .map(|l| l.label.clone())
+                        .collect::<Vec<_>>(),
                     engine.meters.bytes_sent.load(Ordering::Relaxed),
                     engine.meters.server_level()
                 );

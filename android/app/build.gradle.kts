@@ -37,9 +37,27 @@ android {
         }
     }
 
+    // Release signing is configured only when the keystore env vars are present
+    // (set in CI from repo secrets). Without them the release build is unsigned,
+    // so local builds keep working.
+    val releaseKeystore: File? = System.getenv("ANDROID_KEYSTORE_FILE")?.let { File(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

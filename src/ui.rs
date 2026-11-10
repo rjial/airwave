@@ -11,8 +11,8 @@ use gpui::{
 
 use crate::codec::Codec;
 use crate::engine::{Engine, PlayerState, Quality, ServerState};
-use crate::settings::{BUFFER_MAX_MS, BUFFER_MIN_MS};
 use crate::settings::Settings;
+use crate::settings::{BUFFER_MAX_MS, BUFFER_MIN_MS};
 use crate::usb::{Usb, FORWARD_OFFSET};
 
 // ------------------------------------------------------------------ colours
@@ -85,7 +85,11 @@ pub struct AirwaveApp {
 }
 
 impl AirwaveApp {
-    pub fn new(shot: Option<ShotState>, start_page: Option<String>, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        shot: Option<ShotState>,
+        start_page: Option<String>,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let page = match start_page.as_deref() {
             Some("listen") => Page::Listen,
             Some("usb") => Page::Usb,
@@ -447,12 +451,11 @@ fn toggle(
                 .border_1()
                 .border_color(c(if on { ACCENT } else { BORDER }))
                 .when(on, |d| d.justify_end())
-                .child(
-                    div()
-                        .size(px(16.))
-                        .rounded_full()
-                        .bg(c(if on { ON_ACCENT } else { MUTED })),
-                ),
+                .child(div().size(px(16.)).rounded_full().bg(c(if on {
+                    ON_ACCENT
+                } else {
+                    MUTED
+                }))),
         )
         .on_click(cx.listener(move |this, _, _, cx| {
             flip(this);
@@ -702,10 +705,25 @@ impl AirwaveApp {
 
     fn nav_items(&self) -> [(Page, &'static str, &'static str, &'static str); 4] {
         [
-            (Page::Send, "nav-send", "Send", "Share this computer's sound"),
-            (Page::Listen, "nav-listen", "Listen", "Play sound from another device"),
+            (
+                Page::Send,
+                "nav-send",
+                "Send",
+                "Share this computer's sound",
+            ),
+            (
+                Page::Listen,
+                "nav-listen",
+                "Listen",
+                "Play sound from another device",
+            ),
             (Page::Usb, "nav-usb", "USB", "Connect a phone by cable"),
-            (Page::Settings, "nav-settings", "Settings", "Quality, delay and more"),
+            (
+                Page::Settings,
+                "nav-settings",
+                "Settings",
+                "Quality, delay and more",
+            ),
         ]
     }
 
@@ -891,9 +909,21 @@ impl AirwaveApp {
             .unwrap_or_else(|| "no network".to_string());
         let address = format!("{ip}:{}", self.settings.port);
         let (status_color, status_text, status_sub) = match &state {
-            ServerState::Stopped => (FAINT, "Not sending".to_string(), "Press Start to share this computer's sound.".to_string()),
-            ServerState::Starting => (WARN, "Starting…".to_string(), "Opening the sound source.".to_string()),
-            ServerState::Live => (ACCENT, "Sending".to_string(), format!("{format} · {} listening", listeners.len())),
+            ServerState::Stopped => (
+                FAINT,
+                "Not sending".to_string(),
+                "Press Start to share this computer's sound.".to_string(),
+            ),
+            ServerState::Starting => (
+                WARN,
+                "Starting…".to_string(),
+                "Opening the sound source.".to_string(),
+            ),
+            ServerState::Live => (
+                ACCENT,
+                "Sending".to_string(),
+                format!("{format} · {} listening", listeners.len()),
+            ),
             ServerState::Error(e) => (DANGER, "Could not start".to_string(), e.clone()),
         };
         let running = matches!(state, ServerState::Live | ServerState::Starting);
@@ -932,20 +962,34 @@ impl AirwaveApp {
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(c(if matches!(state, ServerState::Error(_)) { DANGER } else { MUTED }))
+                                    .text_color(c(if matches!(state, ServerState::Error(_)) {
+                                        DANGER
+                                    } else {
+                                        MUTED
+                                    }))
                                     .child(status_sub),
                             ),
                     )
                     .child(if running {
-                        button("server-toggle", "Stop", Look::Danger, cx.listener(|this, _, _, cx| {
-                            this.toggle_server();
-                            cx.notify();
-                        }))
+                        button(
+                            "server-toggle",
+                            "Stop",
+                            Look::Danger,
+                            cx.listener(|this, _, _, cx| {
+                                this.toggle_server();
+                                cx.notify();
+                            }),
+                        )
                     } else {
-                        button("server-toggle", "Start sending", Look::Primary, cx.listener(|this, _, _, cx| {
-                            this.toggle_server();
-                            cx.notify();
-                        }))
+                        button(
+                            "server-toggle",
+                            "Start sending",
+                            Look::Primary,
+                            cx.listener(|this, _, _, cx| {
+                                this.toggle_server();
+                                cx.notify();
+                            }),
+                        )
                     }),
             )
             .child(
@@ -994,7 +1038,10 @@ impl AirwaveApp {
             });
 
         let source = card()
-            .child(card_title("Sound to send", "Pick a microphone or a monitor of your speakers"))
+            .child(card_title(
+                "Sound to send",
+                "Pick a microphone or a monitor of your speakers",
+            ))
             .child(device_list(
                 "source-list",
                 &inputs,
@@ -1045,13 +1092,21 @@ impl AirwaveApp {
                     .justify_center()
                     .gap_2()
                     .h(px(150.))
-                    .child(div().text_sm().text_color(c(MUTED)).child("Nobody is listening yet"))
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(c(MUTED))
+                            .child("Nobody is listening yet"),
+                    )
                     .child(label("Open Airwave on another device and choose Listen."))
                     .into_any_element(),
             );
         }
         let who = card()
-            .child(card_title("Listeners", "Devices playing your sound right now"))
+            .child(card_title(
+                "Listeners",
+                "Devices playing your sound right now",
+            ))
             .child(
                 div()
                     .id("listener-list")
@@ -1068,7 +1123,10 @@ impl AirwaveApp {
             .flex()
             .flex_col()
             .gap_5()
-            .child(self.page_header("Send", "Share the sound of this computer with devices on the same network."))
+            .child(self.page_header(
+                "Send",
+                "Share the sound of this computer with devices on the same network.",
+            ))
             .child(hero)
             .child(pair(stack, source, who))
     }
@@ -1090,9 +1148,19 @@ impl AirwaveApp {
         let playing = matches!(state, PlayerState::Playing(_));
         let busy = matches!(state, PlayerState::Playing(_) | PlayerState::Connecting(_));
         let (status_color, status_text, status_sub) = match &state {
-            PlayerState::Idle => (FAINT, "Not playing".to_string(), "Pick a server below to start listening.".to_string()),
-            PlayerState::Connecting(a) => (WARN, "Connecting…".to_string(), format!("Reaching {a}")),
-            PlayerState::Playing(a) => (ACCENT, format!("Playing from {a}"), format!("{format} · {buffer_ms} ms waiting")),
+            PlayerState::Idle => (
+                FAINT,
+                "Not playing".to_string(),
+                "Pick a server below to start listening.".to_string(),
+            ),
+            PlayerState::Connecting(a) => {
+                (WARN, "Connecting…".to_string(), format!("Reaching {a}"))
+            }
+            PlayerState::Playing(a) => (
+                ACCENT,
+                format!("Playing from {a}"),
+                format!("{format} · {buffer_ms} ms waiting"),
+            ),
             PlayerState::Error(e) => (DANGER, "Stopped".to_string(), e.clone()),
         };
 
@@ -1131,7 +1199,11 @@ impl AirwaveApp {
                     .w(px(40.))
                     .text_sm()
                     .text_color(c(TEXT))
-                    .child(if muted { "Muted".to_string() } else { format!("{}%", lit * 10) }),
+                    .child(if muted {
+                        "Muted".to_string()
+                    } else {
+                        format!("{}%", lit * 10)
+                    }),
             )
             .child(button(
                 "mute",
@@ -1178,15 +1250,24 @@ impl AirwaveApp {
                             .child(
                                 div()
                                     .text_sm()
-                                    .text_color(c(if matches!(state, PlayerState::Error(_)) { DANGER } else { MUTED }))
+                                    .text_color(c(if matches!(state, PlayerState::Error(_)) {
+                                        DANGER
+                                    } else {
+                                        MUTED
+                                    }))
                                     .child(status_sub),
                             ),
                     )
                     .when(busy, |d| {
-                        d.child(button("disconnect", "Disconnect", Look::Danger, cx.listener(|this, _, _, cx| {
-                            this.engine.disconnect();
-                            cx.notify();
-                        })))
+                        d.child(button(
+                            "disconnect",
+                            "Disconnect",
+                            Look::Danger,
+                            cx.listener(|this, _, _, cx| {
+                                this.engine.disconnect();
+                                cx.notify();
+                            }),
+                        ))
                     }),
             )
             .child(
@@ -1273,7 +1354,12 @@ impl AirwaveApp {
                     .justify_center()
                     .gap_2()
                     .h(px(150.))
-                    .child(div().text_sm().text_color(c(MUTED)).child("Searching for servers…"))
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(c(MUTED))
+                            .child("Searching for servers…"),
+                    )
                     .child(label("Start sending on another computer running Airwave."))
                     .into_any_element(),
             );
@@ -1286,10 +1372,15 @@ impl AirwaveApp {
                     .items_start()
                     .justify_between()
                     .child(card_title("Servers nearby", "Found on your network"))
-                    .child(button("rescan", "Search again", Look::Quiet, cx.listener(|this, _, _, cx| {
-                        this.engine.scan_now.store(true, Ordering::Relaxed);
-                        cx.notify();
-                    }))),
+                    .child(button(
+                        "rescan",
+                        "Search again",
+                        Look::Quiet,
+                        cx.listener(|this, _, _, cx| {
+                            this.engine.scan_now.store(true, Ordering::Relaxed);
+                            cx.notify();
+                        }),
+                    )),
             )
             .child(
                 div()
@@ -1328,15 +1419,24 @@ impl AirwaveApp {
                 this.on_address_key(ev, cx);
             }))
             .child(if self.address.is_empty() && !focused {
-                div().text_color(c(FAINT)).child("e.g. 192.168.1.20").into_any_element()
+                div()
+                    .text_color(c(FAINT))
+                    .child("e.g. 192.168.1.20")
+                    .into_any_element()
             } else {
-                div().text_color(c(TEXT)).child(self.address.clone()).into_any_element()
+                div()
+                    .text_color(c(TEXT))
+                    .child(self.address.clone())
+                    .into_any_element()
             })
             .when(focused, |d| {
                 d.child(div().w(px(2.)).h(px(16.)).ml(px(1.)).bg(c(ACCENT)))
             });
         let manual = card()
-            .child(card_title("Connect by address", "If a server isn't found automatically, type its address"))
+            .child(card_title(
+                "Connect by address",
+                "If a server isn't found automatically, type its address",
+            ))
             .child(
                 div()
                     .flex()
@@ -1344,15 +1444,23 @@ impl AirwaveApp {
                     .items_center()
                     .gap_3()
                     .child(input)
-                    .child(button("connect-manual", "Connect", Look::Primary, cx.listener(move |this, _, _, cx| {
-                        let a = this.address.clone();
-                        this.connect_to(a);
-                        cx.notify();
-                    }))),
+                    .child(button(
+                        "connect-manual",
+                        "Connect",
+                        Look::Primary,
+                        cx.listener(move |this, _, _, cx| {
+                            let a = this.address.clone();
+                            this.connect_to(a);
+                            cx.notify();
+                        }),
+                    )),
             );
 
         let output = card()
-            .child(card_title("Play through", "Tick one or more speakers to play on all of them at once"))
+            .child(card_title(
+                "Play through",
+                "Tick one or more speakers to play on all of them at once",
+            ))
             .child(multi_device_list(
                 "output-list",
                 &outputs,
@@ -1367,7 +1475,10 @@ impl AirwaveApp {
             .flex()
             .flex_col()
             .gap_5()
-            .child(self.page_header("Listen", "Play sound sent from another computer on your network."))
+            .child(self.page_header(
+                "Listen",
+                "Play sound sent from another computer on your network.",
+            ))
             .child(hero)
             .child(pair(
                 stack,
@@ -1410,7 +1521,12 @@ impl AirwaveApp {
                 .h(px(110.))
                 .rounded(px(8.))
                 .bg(c(BG_MAIN))
-                .child(div().text_sm().text_color(c(MUTED)).child(title.to_string()))
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(c(MUTED))
+                        .child(title.to_string()),
+                )
                 .child(label(hint.to_string()))
                 .into_any_element()
         };
@@ -1433,7 +1549,13 @@ impl AirwaveApp {
                     .py_2()
                     .rounded(px(8.))
                     .bg(c(BG_MAIN))
-                    .child(dot(if is_linked { ACCENT } else if ready { MUTED } else { WARN }))
+                    .child(dot(if is_linked {
+                        ACCENT
+                    } else if ready {
+                        MUTED
+                    } else {
+                        WARN
+                    }))
                     .child(
                         div()
                             .flex()
@@ -1452,31 +1574,54 @@ impl AirwaveApp {
                             })),
                     )
                     .when(ready && !is_linked, |row| {
-                        row.child(button(("adb-link", i).into_shared(), "Link", Look::Primary, cx.listener(move |this, _, _, cx| {
-                            this.usb.adb_link(serial.clone(), this.settings.port);
-                            cx.notify();
-                        })))
+                        row.child(button(
+                            ("adb-link", i).into_shared(),
+                            "Link",
+                            Look::Primary,
+                            cx.listener(move |this, _, _, cx| {
+                                this.usb.adb_link(serial.clone(), this.settings.port);
+                                cx.notify();
+                            }),
+                        ))
                     })
                     .when(is_linked, |row| {
-                        row.child(button(("adb-listen", i).into_shared(), "Listen to phone", Look::Quiet, cx.listener(|this, _, _, cx| {
-                            let addr = format!("127.0.0.1:{}", this.settings.port + FORWARD_OFFSET);
-                            this.engine.connect(addr, this.settings.output_devices.clone());
-                            this.page = Page::Listen;
-                            cx.notify();
-                        })))
-                        .child(button(("adb-unlink", i).into_shared(), "Unlink", Look::Danger, cx.listener(move |this, _, _, cx| {
-                            this.usb.adb_unlink(serial2.clone(), this.settings.port);
-                            cx.notify();
-                        })))
+                        row.child(button(
+                            ("adb-listen", i).into_shared(),
+                            "Listen to phone",
+                            Look::Quiet,
+                            cx.listener(|this, _, _, cx| {
+                                let addr =
+                                    format!("127.0.0.1:{}", this.settings.port + FORWARD_OFFSET);
+                                this.engine
+                                    .connect(addr, this.settings.output_devices.clone());
+                                this.page = Page::Listen;
+                                cx.notify();
+                            }),
+                        ))
+                        .child(button(
+                            ("adb-unlink", i).into_shared(),
+                            "Unlink",
+                            Look::Danger,
+                            cx.listener(move |this, _, _, cx| {
+                                this.usb.adb_unlink(serial2.clone(), this.settings.port);
+                                cx.notify();
+                            }),
+                        ))
                     })
                     .into_any_element(),
             );
         }
         if adb_rows.is_empty() {
             adb_rows.push(match &adb_path {
-                None if scanned => empty("adb was not found", "Install Android platform-tools and put adb on your PATH."),
+                None if scanned => empty(
+                    "adb was not found",
+                    "Install Android platform-tools and put adb on your PATH.",
+                ),
                 None => empty("Looking for adb…", ""),
-                Some(_) => empty("No phone found", "Plug in a phone with USB debugging turned on."),
+                Some(_) => empty(
+                    "No phone found",
+                    "Plug in a phone with USB debugging turned on.",
+                ),
             });
         }
         let adb_card = card()
@@ -1528,43 +1673,67 @@ impl AirwaveApp {
                             .child(label(if p.accessory {
                                 "In accessory mode".to_string()
                             } else {
-                                format!("{:04x}:{:04x} · bus {} device {}", p.vid, p.pid, p.bus, p.address)
+                                format!(
+                                    "{:04x}:{:04x} · bus {} device {}",
+                                    p.vid, p.pid, p.bus, p.address
+                                )
                             })),
                     )
                     .when(!p.accessory, |row| {
-                        row.child(button(("aoa-switch", i).into_shared(), "Use accessory mode", Look::Quiet, cx.listener(move |this, _, _, cx| {
-                            this.usb.switch_to_accessory(bus, addr);
-                            cx.notify();
-                        })))
+                        row.child(button(
+                            ("aoa-switch", i).into_shared(),
+                            "Use accessory mode",
+                            Look::Quiet,
+                            cx.listener(move |this, _, _, cx| {
+                                this.usb.switch_to_accessory(bus, addr);
+                                cx.notify();
+                            }),
+                        ))
                     })
                     .when(p.accessory && !sending_here, |row| {
-                        row.child(button(("aoa-send", i).into_shared(), "Send sound", Look::Primary, cx.listener(move |this, _, _, cx| {
-                            if !this.engine.server_running() {
-                                this.toggle_server();
-                            }
-                            let taps = this.engine.taps.clone();
-                            this.usb.start_accessory_stream(bus, addr, taps);
-                            cx.notify();
-                        })))
+                        row.child(button(
+                            ("aoa-send", i).into_shared(),
+                            "Send sound",
+                            Look::Primary,
+                            cx.listener(move |this, _, _, cx| {
+                                if !this.engine.server_running() {
+                                    this.toggle_server();
+                                }
+                                let taps = this.engine.taps.clone();
+                                this.usb.start_accessory_stream(bus, addr, taps);
+                                cx.notify();
+                            }),
+                        ))
                     })
                     .when(p.accessory && sending_here, |row| {
-                        row.child(button(("aoa-stop", i).into_shared(), "Stop", Look::Danger, cx.listener(move |this, _, _, cx| {
-                            this.usb.stop_accessory_stream(bus, addr);
-                            cx.notify();
-                        })))
+                        row.child(button(
+                            ("aoa-stop", i).into_shared(),
+                            "Stop",
+                            Look::Danger,
+                            cx.listener(move |this, _, _, cx| {
+                                this.usb.stop_accessory_stream(bus, addr);
+                                cx.notify();
+                            }),
+                        ))
                     })
                     .into_any_element(),
             );
         }
         if aoa_rows.is_empty() {
             aoa_rows.push(if scanned {
-                empty("No phone found on USB", "Plug in an Android phone. USB debugging is not needed.")
+                empty(
+                    "No phone found on USB",
+                    "Plug in an Android phone. USB debugging is not needed.",
+                )
             } else {
                 empty("Looking for phones…", "")
             });
         }
         let aoa_card = card()
-            .child(card_title("Accessory mode", "Sends this computer's sound straight down the cable"))
+            .child(card_title(
+                "Accessory mode",
+                "Sends this computer's sound straight down the cable",
+            ))
             .child(div().flex().flex_col().gap_1().children(aoa_rows))
             .child(label(if server_on {
                 "Sending is on: the phone gets the same sound as network listeners."
@@ -1578,7 +1747,10 @@ impl AirwaveApp {
             .flex()
             .flex_col()
             .gap_5()
-            .child(self.page_header("USB", "Use a cable instead of Wi-Fi: steadier sound and less delay."))
+            .child(self.page_header(
+                "USB",
+                "Use a cable instead of Wi-Fi: steadier sound and less delay.",
+            ))
             .child(pair(stack, adb_card, aoa_card))
     }
 
@@ -1678,11 +1850,20 @@ impl AirwaveApp {
                         cx,
                         |this, v| this.set_buffer(v),
                     ))
-                    .child(button("buffer-less", "−", Look::Quiet, cx.listener(|this, _, _, cx| {
-                        let step = if this.settings.buffer_ms > 200 { 50 } else { 10 };
-                        this.set_buffer(this.settings.buffer_ms.saturating_sub(step));
-                        cx.notify();
-                    })))
+                    .child(button(
+                        "buffer-less",
+                        "−",
+                        Look::Quiet,
+                        cx.listener(|this, _, _, cx| {
+                            let step = if this.settings.buffer_ms > 200 {
+                                50
+                            } else {
+                                10
+                            };
+                            this.set_buffer(this.settings.buffer_ms.saturating_sub(step));
+                            cx.notify();
+                        }),
+                    ))
                     .child(
                         div()
                             .w(px(64.))
@@ -1693,11 +1874,20 @@ impl AirwaveApp {
                             .text_color(c(TEXT))
                             .child(format!("{} ms", self.settings.buffer_ms)),
                     )
-                    .child(button("buffer-more", "+", Look::Quiet, cx.listener(|this, _, _, cx| {
-                        let step = if this.settings.buffer_ms >= 200 { 50 } else { 10 };
-                        this.set_buffer(this.settings.buffer_ms + step);
-                        cx.notify();
-                    })))
+                    .child(button(
+                        "buffer-more",
+                        "+",
+                        Look::Quiet,
+                        cx.listener(|this, _, _, cx| {
+                            let step = if this.settings.buffer_ms >= 200 {
+                                50
+                            } else {
+                                10
+                            };
+                            this.set_buffer(this.settings.buffer_ms + step);
+                            cx.notify();
+                        }),
+                    ))
                     .into_any_element(),
             ))
             .child(sep())
@@ -1720,11 +1910,16 @@ impl AirwaveApp {
             .child(row(
                 "Sound devices",
                 "Plugged in a headset or microphone? Look again.",
-                button("refresh-devices", "Refresh list", Look::Quiet, cx.listener(|this, _, _, cx| {
-                    this.engine.status.lock().unwrap().devices.loaded = false;
-                    this.engine.refresh_devices();
-                    cx.notify();
-                }))
+                button(
+                    "refresh-devices",
+                    "Refresh list",
+                    Look::Quiet,
+                    cx.listener(|this, _, _, cx| {
+                        this.engine.status.lock().unwrap().devices.loaded = false;
+                        this.engine.refresh_devices();
+                        cx.notify();
+                    }),
+                )
                 .into_any_element(),
             ))
             .child(sep())
@@ -1774,7 +1969,9 @@ fn brand(with_tagline: bool) -> impl IntoElement {
                         .text_color(c(TEXT))
                         .child("Airwave"),
                 )
-                .when(with_tagline, |d| d.child(label("Sound across your network"))),
+                .when(with_tagline, |d| {
+                    d.child(label("Sound across your network"))
+                }),
         )
 }
 

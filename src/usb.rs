@@ -108,7 +108,8 @@ impl Usb {
             let phones = list_phones();
             let mut st = state.lock().unwrap();
             st.adb_path = adb;
-            st.adb_linked.retain(|s| devices.iter().any(|d| &d.serial == s));
+            st.adb_linked
+                .retain(|s| devices.iter().any(|d| &d.serial == s));
             st.adb_devices = devices;
             if adb_err.is_some() {
                 st.adb_note = adb_err;
@@ -126,9 +127,27 @@ impl Usb {
                 return;
             };
             let res = (|| -> Result<()> {
-                run_adb(&adb, &["-s", &serial, "reverse", &format!("tcp:{port}"), &format!("tcp:{port}")])?;
+                run_adb(
+                    &adb,
+                    &[
+                        "-s",
+                        &serial,
+                        "reverse",
+                        &format!("tcp:{port}"),
+                        &format!("tcp:{port}"),
+                    ],
+                )?;
                 let local = port + FORWARD_OFFSET;
-                run_adb(&adb, &["-s", &serial, "forward", &format!("tcp:{local}"), &format!("tcp:{port}")])?;
+                run_adb(
+                    &adb,
+                    &[
+                        "-s",
+                        &serial,
+                        "forward",
+                        &format!("tcp:{local}"),
+                        &format!("tcp:{port}"),
+                    ],
+                )?;
                 Ok(())
             })();
             let mut st = state.lock().unwrap();
@@ -152,9 +171,21 @@ impl Usb {
             let Some(adb) = state.lock().unwrap().adb_path.clone() else {
                 return;
             };
-            let _ = run_adb(&adb, &["-s", &serial, "reverse", "--remove", &format!("tcp:{port}")]);
+            let _ = run_adb(
+                &adb,
+                &["-s", &serial, "reverse", "--remove", &format!("tcp:{port}")],
+            );
             let local = port + FORWARD_OFFSET;
-            let _ = run_adb(&adb, &["-s", &serial, "forward", "--remove", &format!("tcp:{local}")]);
+            let _ = run_adb(
+                &adb,
+                &[
+                    "-s",
+                    &serial,
+                    "forward",
+                    "--remove",
+                    &format!("tcp:{local}"),
+                ],
+            );
             let mut st = state.lock().unwrap();
             st.adb_linked.retain(|s| s != &serial);
             st.adb_note = Note::ok("Unlinked.");
@@ -351,12 +382,12 @@ fn aoa_handshake(bus: u8, address: u8) -> Result<u16> {
         bail!("The phone does not support accessory mode");
     }
     let strings = [
-        "Airwave",                         // manufacturer
-        "Airwave Audio",                   // model
-        "Sound from your computer",        // description
-        "1.0",                             // version
-        "",                                // URI
-        "AIRWAVE0001",                     // serial
+        "Airwave",                  // manufacturer
+        "Airwave Audio",            // model
+        "Sound from your computer", // description
+        "1.0",                      // version
+        "",                         // URI
+        "AIRWAVE0001",              // serial
     ];
     for (i, s) in strings.iter().enumerate() {
         let mut data = s.as_bytes().to_vec();
@@ -389,7 +420,9 @@ fn aoa_handshake(bus: u8, address: u8) -> Result<u16> {
 fn aoa_handshake(_bus: u8, _address: u8) -> Result<u16> {
     let _ = (AOA_GET_PROTOCOL, AOA_SEND_STRING, AOA_START);
     let _ = std::marker::PhantomData::<(ControlIn, ControlOut, ControlType, Recipient)>;
-    bail!("Switching to accessory mode is not available on Windows in this version; use adb instead")
+    bail!(
+        "Switching to accessory mode is not available on Windows in this version; use adb instead"
+    )
 }
 
 fn run_accessory(
@@ -403,7 +436,11 @@ fn run_accessory(
     let info = nusb::list_devices()?
         .find(|d| d.bus_number() == bus && d.device_address() == address)
         .filter(|d| is_accessory(d.vendor_id(), d.product_id()))
-        .ok_or_else(|| anyhow!("That phone is not in accessory mode any more. Press \"Use accessory mode\" again."))?;
+        .ok_or_else(|| {
+            anyhow!(
+                "That phone is not in accessory mode any more. Press \"Use accessory mode\" again."
+            )
+        })?;
     let name = info
         .product_string()
         .map(|s| s.to_string())
@@ -423,7 +460,8 @@ fn run_accessory(
             }
         }
     }
-    let ep_out = ep_out.ok_or_else(|| anyhow!("The phone's accessory connection has no audio channel"))?;
+    let ep_out =
+        ep_out.ok_or_else(|| anyhow!("The phone's accessory connection has no audio channel"))?;
     let iface = dev
         .detach_and_claim_interface(0)
         .context("Could not take over the phone's accessory connection")?;

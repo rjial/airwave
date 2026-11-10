@@ -82,7 +82,10 @@ pub fn capture_window(title: &str, out: &Path) -> Result<()> {
     let data = img.data;
     let px = (w as usize) * (h as usize);
     if depth < 24 || data.len() < px * 4 {
-        bail!("unsupported window format (depth {depth}, {} bytes)", data.len());
+        bail!(
+            "unsupported window format (depth {depth}, {} bytes)",
+            data.len()
+        );
     }
     let stride = data.len() / h as usize;
     let mut rgba = Vec::with_capacity(px * 4);

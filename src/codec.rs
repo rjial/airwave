@@ -112,11 +112,10 @@ pub fn ulaw_decode(u: u8) -> i16 {
 const INDEX_TABLE: [i32; 16] = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8];
 const STEP_TABLE: [i32; 89] = [
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
-    73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408,
-    449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066,
-    2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630,
-    9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794,
-    32767,
+    73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449,
+    494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272,
+    2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493,
+    10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767,
 ];
 
 #[derive(Clone, Copy, Default, Debug)]
@@ -252,8 +251,10 @@ fn decode_payload(codec: Codec, ch: usize, frames: usize, data: &[u8]) -> Option
     let n = frames * ch;
     Some(match codec {
         Codec::Pcm => data
-            .chunks_exact(2)
-            .map(|b| i16::from_le_bytes([b[0], b[1]]))
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|&b| i16::from_le_bytes(b))
             .collect(),
         Codec::MuLaw => data.iter().map(|&u| ulaw_decode(u)).collect(),
         Codec::Adpcm => {
@@ -401,6 +402,9 @@ mod tests {
         }
         // At most the damaged packet and the one it swallowed are lost.
         let last = packets.len() - 1;
-        assert!(got >= (last - 1) * 2 * Codec::Adpcm.max_frames(2) / 2, "only {got} samples");
+        assert!(
+            got >= (last - 1) * 2 * Codec::Adpcm.max_frames(2) / 2,
+            "only {got} samples"
+        );
     }
 }
