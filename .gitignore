@@ -1,0 +1,36 @@
+# Rust
+/target
+**/*.rs.bk
+
+# Android / Gradle
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+android/app/.cxx/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Craft Anything workspace artifacts (kept out of the repo)
+/agent-session.jsonl
+/build-activity.log
+/craft.json
+/feed.json
+/usage.json
+/capture/
+/checks/
+/inbox/
+/pinned/
+/reference/
+/investigation.cany/
+/shots/

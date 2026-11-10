@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple original icon: sound bars on a dark rounded square. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#FF163A36" android:pathData="M10,2h28a8,8 0 0 1 8,8v28a8,8 0 0 1 -8,8h-28a8,8 0 0 1 -8,-8v-28a8,8 0 0 1 8,-8z" />
+    <path android:fillColor="#FF47D1B8" android:pathData="M11,19h3v10h-3z" />
+    <path android:fillColor="#FF47D1B8" android:pathData="M17,14h3v20h-3z" />
+    <path android:fillColor="#FF47D1B8" android:pathData="M23,9h3v30h-3z" />
+    <path android:fillColor="#FF47D1B8" android:pathData="M29,15h3v18h-3z" />
+    <path android:fillColor="#FF47D1B8" android:pathData="M35,20h3v8h-3z" />
+</vector>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Must match the strings the computer app sends in its accessory handshake. -->
+<resources>
+    <usb-accessory manufacturer="Airwave" model="Airwave Audio" />
+</resources>
