@@ -71,10 +71,11 @@ jobs:
           java-version: "17"
 
       - uses: android-actions/setup-android@v3
+        with:
+          packages: "" # skip the obsolete default "tools" package
 
-      - name: Install NDK and CMake
-        run: |
-          sdkmanager "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Install SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;36.1.0" "ndk;28.2.13676358" "cmake;3.22.1"
 
       - name: Decode signing keystore
         env:
